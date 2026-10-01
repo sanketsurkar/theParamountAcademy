@@ -1,0 +1,144 @@
+Start a new chat and paste Prompt 0 (the brief) followed by Prompt 1.
+Create each file Claude gives you in VS Code, run the app, and test before moving on.
+Start a fresh chat for each phase. Paste the brief again plus the Continue prompt; long chats hit the limits sooner.
+If a reply stops midway, type: Continue exactly from where you stopped, inside the same code block.
+If you hit the usage limit, wait for it to reset. Your files are safe on your laptop.
+
+##############################################################################################
+
+Phase prompts (send one at a time after the brief)
+
+Prompt 0: Project brief (paste at the start of every chat)
+You are a senior Python full-stack developer. Help me build "Paramount Academy Lite",
+a coaching academy web app (installable PWA) for ~500 users, step by step.
+
+## Tech stack (do not change)
+- Python 3.12+, FastAPI, Uvicorn, SQLAlchemy 2.0, Jinja2 templates (server-rendered HTML)
+- SQLite locally (instance/paramount.db); PostgreSQL online via DATABASE_URL (psycopg 3)
+- Sessions: Starlette SessionMiddleware (signed cookie); CSRF token in every POST form
+- Passwords: hashlib PBKDF2-SHA256 (standard library, no bcrypt)
+- Frontend: plain HTML + one hand-written CSS file + one plain JavaScript file.
+  NO React, NO Node.js, NO CDN, NO build step. No inline JS (strict CSP: script-src 'self').
+- Offline: service worker sw.js + manifest.webmanifest
+- Excel import: openpyxl. Cloud files: Supabase Storage via httpx (optional, env-based)
+- Windows laptop, VS Code. requirements.txt: fastapi, uvicorn, sqlalchemy, jinja2,
+  python-multipart, itsdangerous, openpyxl, httpx, psycopg[binary]
+
+## Roles & login (one login page: ID + password)
+- Admin: ADM-001 | Teacher: TCH-001 | Student: TPA<yy>-0001 (parents use the student login)
+- New users get a 6-char one-time password and MUST change it on first login (8+ chars, letters+numbers)
+- Only admin resets passwords. Max 5 failed logins per minute per ID.
+
+## Features
+1. Subjects per class (1–12). Default for every class: English, Mathematics, Science.
+   Admin can add (with colour + emoji icon, to several classes at once), rename, reorder,
+   copy to other classes, remove. Remove = delete if unused; if it has notes/marks -> archive
+   (hidden from students and new exams, old results still show, can restore).
+2. Course notes: Subject -> Chapter -> PDF/DOCX (max 10 MB, check file signature).
+   Students open or "Save offline".
+3. Exams & marks: exam per class (name, date, max marks per subject, Draft/Published).
+   Spreadsheet-style marks grid with autosave (JSON POST), Enter moves down, invalid cells red,
+   live % per student and class average, optional remark per student. Students see only published.
+4. Results & progress: per exam subject marks, total, %, rank in class, teacher remark,
+   SVG trend chart across exams.
+5. Leaderboard per class: latest published exam, average %, ties share rank, top 10 + "your rank",
+   names shown as "Aarav S.", admin can switch it off.
+6. Fees: instalments (per student or whole class), status Paid/Partial/Due/Overdue, UPI ID + QR +
+   upi:// pay link; admin records payment (UPI needs reference) -> receipt RCPT-<year>-0001, printable.
+7. Notices: to everyone or one class, optional expiry.
+8. Students & teachers: add, edit, deactivate, bulk import Excel/CSV, teachers limited to
+   assigned classes and cannot see fees. Year-end "Promote" (type PROMOTE): +1 class, 12 -> passed out.
+9. Offline (students only, read-only): student pages network-first with cached fallback,
+   saved PDFs from cache, logout clears cached pages.
+10. Audit log of marks, fees, passwords, subjects, promotion.
+
+## Data model (SQLAlchemy)
+users, students, teachers, teacher_standards, subjects(colour, icon, position, archived),
+content, exams, results(unique exam+student+subject), exam_remarks, fee_instalments(amount,
+paid_amount, due_date), payments(receipt_no unique), notices, settings(key/value), audit_log
+
+## UI style
+Modern, mobile-first: navy (#1e3a8a) + amber (#f59e0b) gradient hero cards, rounded cards,
+soft shadows, light/dark mode toggle, toast messages, bottom tab bar for students
+(Home, Courses, Results, Ranks, Fees), sidebar for staff on desktop, slide-up sheets for forms,
+animated progress ring, count-up numbers, leaderboard podium, respect prefers-reduced-motion.
+
+## Folder structure
+paramount-lite/ run.py, requirements.txt, README.md
+app/ main.py config.py db.py models.py security.py deps.py services.py storage.py seed.py
+app/routes/ auth.py student.py staff.py admin.py
+app/templates/ base.html macros.html login.html ... student/ staff/ admin/
+app/static/ app.css app.js theme.js sw.js offline.html manifest.webmanifest icons/
+
+## Rules for every answer
+- Give COMPLETE files only (no "..." or "rest stays the same"), each with its file path as a heading.
+- At most 4 files per answer. If more remain, stop and say "Reply NEXT for the remaining files".
+- Keep code simple and commented for a .NET developer learning Python.
+- After files, give the exact PowerShell commands to run and what I should see.
+- Don't change files from earlier phases unless I ask; if a change is required, say which file and why.
+
+Phase 1(foundation): Create requirements.txt, run.py (options --reset, --lan, --dev), app/config.py,
+app/db.py, app/models.py (all tables), app/security.py.
+Then give me the PowerShell commands to create the venv and install packages.
+
+Prompt 2: Core app and login
+
+Phase 2: Create app/deps.py (current user, role checks, CSRF, flash, render, filters for ₹ Indian
+format, date, initials, short name), app/services.py (IDs, subjects, ranks, progress, save_marks,
+fees, receipts, import, promotion, SVG charts, audit), app/storage.py (local + Supabase),
+app/seed.py (demo data: 1 admin, 3 teachers, 36 students in classes 5/8/10, 2 published exams,
+fees with paid/overdue, sample PDFs), app/main.py, app/routes/auth.py.
+
+Prompt 3: Design system
+Phase 3: Create app/static/app.css (full design system from the brief), app/static/theme.js,
+app/static/app.js (toasts, dialogs/sheets, side panel fetch with X-Partial header, count-up,
+carousel dots, instant search filter, save-offline buttons, drag-drop upload with progress,
+marks grid keyboard + autosave, tab indicator, pull-to-refresh, confetti), sw.js, offline.html,
+manifest.webmanifest, and a Python script to generate the PNG icons.
+
+Prompt 4: Student pages
+
+Phase 4: Create app/routes/student.py and templates: base.html, macros.html, login.html,
+change_password.html, logged_out.html, error.html, receipt.html,
+student/_base.html, home, courses, subject, results, leaderboard, fees, profile.
+
+
+Prompt 5: Teacher pages
+
+Phase 5: Create app/routes/staff.py and templates: staff/_base.html, teacher_home, students,
+student_detail (works as full page and side-panel fragment), credentials, import, content,
+exams, marks.
+
+
+Prompt 6: Admin pages
+
+Phase 6: Create app/routes/admin.py and templates: admin/dashboard, _pay_dialog, teachers,
+subjects, fees, student_fees, notices, settings, promote, audit.
+
+Prompt 7: Testing
+
+Phase 7: Write tests/smoke_test.py using FastAPI TestClient that logs in as each role and checks:
+every page returns 200, role restrictions (403), CSRF rejection, forced password change,
+autosave valid/invalid marks, publish -> leaderboard, subject add/rename/archive/restore,
+payment -> receipt, CSV/Excel import, promotion, login rate limit. Print PASS/FAIL counts.
+
+
+Prompt 8: Deployment
+
+Phase 8: Write README.md and DEPLOY.md: free deployment with GitHub (private repo) + Render
+(Singapore, free) + Supabase (Postgres session pooler + Storage, service_role key),
+environment variables APP_ENV, SECRET_KEY, ADMIN_PASSWORD, DATABASE_URL, SUPABASE_URL,
+SUPABASE_SERVICE_KEY, PYTHON_VERSION, plus troubleshooting.
+
+[Paste Prompt 0 here]
+
+Progress: Phases 1–<N> are done and working. Current files:
+<paste the output of:  tree /f app   or  dir /s /b app>
+
+Here are the files you need to stay consistent with:
+<paste models.py and deps.py (and any file the next phase depends on)>
+
+Now do Phase <N+1>.
+
+
+
