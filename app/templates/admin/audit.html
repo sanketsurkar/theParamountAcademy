@@ -1,0 +1,21 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head"><div><h1>Activity log</h1><div class="sub">Last 300 changes to marks, fees, passwords and settings</div></div></div>
+  <div class="search"><input type="search" placeholder="Filter by person or action…" data-filter="#audit-rows" aria-label="Filter log"></div>
+  <div class="card pad0 scroll">
+    <table class="tbl">
+      <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead>
+      <tbody id="audit-rows">
+      {% for a, name in rows %}
+        <tr><td class="nowrap small">{{ a.created_at.strftime('%d %b, %I:%M %p') }}</td><td class="small">{{ name or 'System' }}</td>
+          <td><span class="badge b-info">{{ a.action }}</span></td><td class="small">{{ a.detail }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div id="nomatch" hidden>{{ ui.empty('🔎', 'Nothing matches') }}</div>
+    {% if not rows %}{{ ui.empty('🕵️', 'No activity yet') }}{% endif %}
+  </div>
+</div>
+{% endblock %}
