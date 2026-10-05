@@ -1,0 +1,43 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head"><div><h1>Dashboard</h1><div class="sub">{{ settings.academy_name }} · {{ today|d }}</div></div>
+    <div class="row"><a class="btn sm ghost" href="/admin/notices">📢 Post notice</a><a class="btn sm" href="/staff/students">＋ Add student</a></div></div>
+  <div class="grid g4">
+    <a class="kpi" href="/staff/students"><div class="ic">🎒</div><b data-count="{{ kpi.students }}">{{ kpi.students }}</b><span>Active students</span></a>
+    <a class="kpi" href="/admin/teachers"><div class="ic">🧑‍🏫</div><b data-count="{{ kpi.teachers }}">{{ kpi.teachers }}</b><span>Teachers</span></a>
+    <a class="kpi" href="/admin/fees"><div class="ic">💰</div><b data-count="{{ kpi.collected }}" data-money>{{ kpi.collected|money }}</b><span>Collected · <span class="trend-up">{{ kpi.rate }}%</span></span></a>
+    <a class="kpi" href="/admin/fees"><div class="ic">⏰</div><b data-count="{{ kpi.overdue }}" data-money style="color:var(--bad)">{{ kpi.overdue|money }}</b><span>Overdue · {{ kpi.pending|money }} pending</span></a>
+  </div>
+  <div class="grid md-g2" style="margin-top:14px">
+    <div class="card" style="margin:0">
+      <div class="card-title"><h3>Fees by class</h3>
+        <div class="legend"><span><i style="background:var(--ok)"></i>Collected</span><span><i style="background:var(--accent)"></i>Pending</span></div></div>
+      {% if chart %}{{ chart|safe }}{% else %}{{ ui.empty('📊', 'No fee data yet') }}{% endif %}
+      <p class="xs muted" style="margin-bottom:0">This month: <b>{{ kpi.month|money }}</b> received · {{ kpi.files }} note files uploaded</p>
+    </div>
+    <div class="card" style="margin:0">
+      <div class="card-title"><h3>⏰ Overdue fees</h3><a class="small" href="/admin/fees">All fees →</a></div>
+      {% for f in overdue %}
+      <div class="row" style="padding:9px 0;border-bottom:1px solid var(--line)">
+        <span class="avatar" style="width:36px;height:36px;border-radius:12px;font-size:.78rem">{{ f.student.user.name|initials }}</span>
+        <div class="grow"><b class="small">{{ f.student.user.name }}</b><div class="xs muted">Class {{ f.student.standard }} · {{ f.title }} · due {{ f.due_date|d }}</div></div>
+        <b class="small" style="color:var(--bad)">{{ f.outstanding|money }}</b>
+        <button class="btn sm soft" type="button" data-open="payDlg" data-action="/admin/fees/instalment/{{ f.id }}/pay"
+          data-values='{{ {"amount": f.outstanding|int, "who": f.student.user.name ~ " · " ~ f.title, "back": "/staff"}|tojson }}'>Record</button>
+      </div>
+      {% else %}{{ ui.empty('🎉', 'Nothing overdue', 'All fees are up to date.') }}{% endfor %}
+    </div>
+  </div>
+  <h2>Recent payments</h2>
+  <div class="card pad0">
+    {% for p in recent %}
+    <a class="item" href="/receipt/{{ p.id }}"><span>🧾</span>
+      <span class="grow"><b class="small">{{ p.instalment.student.user.name }}</b><br><span class="xs muted">{{ p.receipt_no }} · {{ p.method }} · {{ p.paid_on|d }}</span></span>
+      <b>{{ p.amount|money }}</b><span class="chev">›</span></a>
+    {% else %}{{ ui.empty('🧾', 'No payments yet') }}{% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block page_dialogs %}{% include "admin/_pay_dialog.html" %}{% endblock %}
