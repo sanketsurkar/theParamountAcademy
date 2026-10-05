@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block shell %}
+<div class="auth-bg"><main class="auth">
+  <div class="brandmark"><div class="logo">{{ '🔍' if code == 404 else ('🚫' if code == 403 else '⚠️') }}</div>
+    <h1>{% if code == 404 %}Not found{% elif code == 403 %}No access{% elif code == 400 %}Please check that{% else %}Something went wrong{% endif %}</h1></div>
+  <div class="card center">
+    <p>{{ message }}</p>
+    <div class="row" style="justify-content:center">
+      <a class="btn" href="/home">Go home</a>
+      <a class="btn ghost" href="/home" data-back>Back</a>
+    </div>
+  </div>
+</main></div>
+{% endblock %}
