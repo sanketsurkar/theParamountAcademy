@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block body_attrs %}data-clear-cache{% endblock %}
+{% block shell %}
+<div class="auth-bg"><main class="auth">
+  <div class="brandmark"><div class="logo">👋</div><h1>See you soon!</h1></div>
+  <div class="card center">
+    <p id="clear-msg" class="muted">Clearing saved pages from this device…</p>
+    <a class="btn block" href="/login">Sign in again</a>
+  </div>
+</main></div>
+{% endblock %}
