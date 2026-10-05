@@ -1,0 +1,29 @@
+{% if partial %}{{ self.content() }}{% else %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1e3a8a">
+  <meta name="csrf" content="{{ csrf }}">
+  <title>{% block title %}{{ settings.academy_name }}{% endblock %}</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <script src="/static/theme.js?v=2.0"></script>
+  <link rel="stylesheet" href="/static/app.css?v=2.0">
+</head>
+<body class="{% block body_class %}{% endblock %}" data-rendered="{{ now.strftime('%d %b, %I:%M %p') }}" {% block body_attrs %}{% endblock %}>
+  <div id="nprogress" aria-hidden="true"></div>
+  <div id="offline" class="offline" role="status" hidden></div>
+  {% block shell %}<main class="wrap">{% block content %}{% endblock %}</main>{% endblock %}
+  <div class="toasts" id="toasts" aria-live="polite">
+    {% for kind, msg in flashes %}<div class="toast {{ kind }}" role="status"><span>{{ msg }}</span><button class="x" aria-label="Dismiss">×</button></div>{% endfor %}
+  </div>
+  <dialog id="panel" class="sheet side" aria-labelledby="panel-t">
+    <div class="sheet-head"><h3 id="panel-t"></h3><button type="button" class="sheet-close" data-close aria-label="Close">✕</button></div>
+    <div class="sheet-body"></div>
+  </dialog>
+  {% block dialogs %}{% endblock %}
+  <script src="/static/app.js?v=2.0" defer></script>
+</body>
+</html>{% endif %}
