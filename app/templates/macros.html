@@ -1,0 +1,26 @@
+{# Reusable UI pieces. Import with: {% import "macros.html" as ui with context %} #}
+
+{% macro sheet(id, title, side=false) -%}
+<dialog id="{{ id }}" class="sheet{{ ' side' if side }}" aria-labelledby="{{ id }}-t">
+  <div class="sheet-head"><h3 id="{{ id }}-t">{{ title }}</h3>
+    <button type="button" class="sheet-close" data-close aria-label="Close">✕</button></div>
+  <div class="sheet-body">{{ caller() }}</div>
+</dialog>
+{%- endmacro %}
+
+{% macro class_chips(classes, current, base, counts=none, extra=none) -%}
+<nav class="chips" aria-label="Choose class">
+  {% for c in classes %}
+    <a class="chip{{ ' on' if c == current }}" href="{{ base }}{{ '&' if '?' in base else '?' }}standard={{ c }}">Class {{ c }}{% if counts is not none %}<small>{{ counts.get(c, 0) }}</small>{% endif %}</a>
+  {% endfor %}
+  {% if extra %}{{ extra|safe }}{% endif %}
+</nav>
+{%- endmacro %}
+
+{% macro csrf_field() %}<input type="hidden" name="csrf" value="{{ csrf }}">{% endmacro %}
+
+{% macro empty(icon, title, text="") -%}
+<div class="empty"><span class="big">{{ icon }}</span><b>{{ title }}</b>{% if text %}<p class="small">{{ text }}</p>{% endif %}</div>
+{%- endmacro %}
+
+{% macro pct_colour(p) %}{{ 'var(--bad)' if p < 40 else ('var(--warn)' if p < 70 else 'var(--ok)') }}{% endmacro %}
