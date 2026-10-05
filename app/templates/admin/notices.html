@@ -1,0 +1,35 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head"><div><h1>Notices</h1><div class="sub">Shown on students' home screen</div></div>
+    <button class="btn sm" type="button" data-open="addNotice">＋ New notice</button></div>
+  {% for n in rows %}
+  {% set expired = n.expires_on and n.expires_on < today %}
+  <div class="card notice" {% if expired %}style="opacity:.6"{% endif %}>
+    <div class="spread">
+      <div class="grow"><div class="tag">{{ 'Class ' ~ n.standard if n.standard else 'Everyone' }} · {{ n.created_at|d }}{% if n.expires_on %} · {{ 'expired' if expired else 'until ' ~ (n.expires_on|d) }}{% endif %}</div>
+        <b>{{ n.title }}</b>{% if n.body %}<div class="small muted">{{ n.body }}</div>{% endif %}</div>
+      <form method="post" action="/admin/notices/{{ n.id }}/delete" class="inline" data-confirm="Remove this notice?">
+        {{ ui.csrf_field() }}<button class="btn sm icon ghost" aria-label="Remove notice">🗑</button></form>
+    </div>
+  </div>
+  {% else %}
+  <div class="card">{{ ui.empty('📢', 'No notices yet', 'Post one to show it on every student\'s home screen.') }}</div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block page_dialogs %}
+{% call ui.sheet('addNotice', 'New notice') %}
+<form method="post" action="/admin/notices">
+  {{ ui.csrf_field() }}
+  <label for="no-t">Title</label><input id="no-t" name="title" required maxlength="150" placeholder="e.g. Holiday on Friday" autofocus>
+  <label for="no-b">Details <span class="muted">(optional)</span></label><textarea id="no-b" name="body" maxlength="1000"></textarea>
+  <div class="field-row">
+    <div><label for="no-s">Show to</label><select id="no-s" name="standard"><option value="">Everyone</option>{% for s in STANDARDS %}<option value="{{ s }}">Class {{ s }}</option>{% endfor %}</select></div>
+    <div><label for="no-e">Hide after <span class="muted">(optional)</span></label><input id="no-e" name="expires_on" type="date"></div>
+  </div>
+  <button class="btn block" style="margin-top:14px">📢 Post notice</button>
+</form>
+{% endcall %}
+{% endblock %}
