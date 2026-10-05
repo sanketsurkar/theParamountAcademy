@@ -1,0 +1,42 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head"><div><h1>Fees</h1><div class="sub">Class {{ standard }} · {{ rows|length }} students</div></div>
+    <button class="btn sm" type="button" data-open="bulkFee">＋ Instalment for whole class</button></div>
+  {{ ui.class_chips(STANDARDS, standard, '/admin/fees') }}
+  <div class="grid g4">
+    <div class="kpi"><div class="ic">🧾</div><b data-count="{{ summary.billed }}" data-money>{{ summary.billed|money }}</b><span>Billed</span></div>
+    <div class="kpi"><div class="ic">✅</div><b data-count="{{ summary.paid }}" data-money style="color:var(--ok)">{{ summary.paid|money }}</b><span>Collected</span></div>
+    <div class="kpi"><div class="ic">🕒</div><b data-count="{{ summary.due }}" data-money>{{ summary.due|money }}</b><span>Pending</span></div>
+    <div class="kpi"><div class="ic">⏰</div><b data-count="{{ summary.overdue }}" data-money style="color:var(--bad)">{{ summary.overdue|money }}</b><span>Overdue</span></div>
+  </div>
+  <div class="search" style="margin-top:14px"><input type="search" placeholder="Search students…" data-filter="#fee-list" aria-label="Search students"></div>
+  <div class="card pad0"><div id="fee-list">
+    {% for st in rows %}{% set t = totals[st.id] %}
+    <a class="item" href="/admin/fees/student/{{ st.id }}">
+      <span class="avatar">{{ st.user.name|initials }}</span>
+      <span class="grow"><b>{{ st.user.name }}</b><br><span class="xs muted">{{ st.user.login_id }} · paid {{ t.paid|money }} of {{ t.billed|money }}</span>
+        <div class="bar" style="height:6px;margin-top:6px;max-width:220px"><i style="--w:{{ (t.paid / t.billed * 100) if t.billed else 0 }}%"></i></div></span>
+      <span class="right">{% if t.overdue %}<span class="badge b-Overdue">{{ t.overdue|money }} overdue</span>{% elif t.due %}<span class="badge b-Due">{{ t.due|money }} due</span>{% else %}<span class="badge b-Paid">Paid up</span>{% endif %}</span>
+      <span class="chev">›</span></a>
+    {% endfor %}
+  </div>
+  <div id="nomatch" hidden>{{ ui.empty('🔎', 'No matching students') }}</div>
+  {% if not rows %}{{ ui.empty('🎒', 'No students in Class ' ~ standard) }}{% endif %}</div>
+</div>
+{% endblock %}
+{% block page_dialogs %}
+{% call ui.sheet('bulkFee', 'New instalment · Class ' ~ standard) %}
+<form method="post" action="/admin/fees/bulk">
+  {{ ui.csrf_field() }}<input type="hidden" name="standard" value="{{ standard }}">
+  <label for="bf-t">Title</label><input id="bf-t" name="title" placeholder="e.g. Term 3 fee" required maxlength="120" autofocus>
+  <div class="field-row">
+    <div><label for="bf-a">Amount (₹) per student</label><input id="bf-a" name="amount" type="number" min="1" step="1" required></div>
+    <div><label for="bf-d">Due date</label><input id="bf-d" name="due_date" type="date" required></div>
+  </div>
+  <p class="hint">Added for all {{ rows|length }} active students in Class {{ standard }}.</p>
+  <button class="btn block" style="margin-top:12px">Add instalment</button>
+</form>
+{% endcall %}
+{% endblock %}
