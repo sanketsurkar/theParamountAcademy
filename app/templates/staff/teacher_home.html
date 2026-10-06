@@ -1,0 +1,36 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <section class="card hero">
+    <div class="muted small">{{ 'Good morning' if now.hour < 12 else ('Good afternoon' if now.hour < 17 else 'Good evening') }}</div>
+    <h1 style="margin:2px 0;color:#fff">{{ user.name }} 👋</h1>
+    <div class="muted small">{{ user.login_id }} · Classes {{ classes|map(attribute='standard')|join(', ') or 'not assigned yet' }}</div>
+  </section>
+  <div class="quick">
+    <a href="/staff/exams"><span class="ic">📝</span>Enter marks</a>
+    <a href="/staff/content"><span class="ic">📤</span>Upload notes</a>
+    <a href="/staff/students"><span class="ic">➕</span>Add student</a>
+  </div>
+  <h2>My classes</h2>
+  {% if not classes %}
+    <div class="card">{{ ui.empty('🗂️', 'No classes assigned', 'Ask the admin to assign your classes.') }}</div>
+  {% endif %}
+  <div class="grid md-g2">
+    {% for c in classes %}
+    <div class="card" style="margin:0">
+      <div class="card-title"><h3>Class {{ c.standard }}</h3><span class="badge b-info">{{ c.students }} students</span></div>
+      <div class="small muted">
+        Latest published: <b style="color:var(--text)">{{ c.latest.name if c.latest else '—' }}</b><br>
+        {{ c.files }} note file{{ '' if c.files == 1 else 's' }}{% if c.drafts %} · <span class="badge b-draft">{{ c.drafts }} draft exam{{ '' if c.drafts == 1 else 's' }}</span>{% endif %}
+      </div>
+      <div class="row" style="margin-top:12px;gap:6px">
+        <a class="btn sm" href="/staff/exams?standard={{ c.standard }}">Marks</a>
+        <a class="btn sm soft" href="/staff/content?standard={{ c.standard }}">Notes</a>
+        <a class="btn sm ghost" href="/staff/students?standard={{ c.standard }}">Students</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
