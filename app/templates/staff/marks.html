@@ -1,0 +1,53 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <a class="small" href="/staff/exams?standard={{ exam.standard }}">← Exams · Class {{ exam.standard }}</a>
+  <div class="page-head" style="margin-top:8px">
+    <div><h1>{{ exam.name }} <span class="badge {{ 'b-published' if exam.published else 'b-draft' }}" style="vertical-align:middle">{{ 'Published' if exam.published else 'Draft' }}</span></h1>
+      <div class="sub">Class {{ exam.standard }} · {{ exam.exam_date|d }} · out of {{ exam.max_marks|num }} per subject</div></div>
+    <div class="row">
+      <form method="post" action="/staff/exams/{{ exam.id }}/publish" class="inline"
+            data-confirm="{{ 'Hide these results from students?' if exam.published else 'Publish results? Students and parents will see them immediately.' }}">
+        {{ ui.csrf_field() }}{% if exam.published %}<input type="hidden" name="unpublish" value="1">{% endif %}
+        <button class="btn sm {{ 'ghost' if exam.published else 'success' }}">{{ '🙈 Unpublish' if exam.published else '🚀 Publish results' }}</button></form>
+      {% if user.role == 'admin' %}
+      <form method="post" action="/staff/exams/{{ exam.id }}/delete" class="inline" data-confirm="Delete this exam and all its marks? This can't be undone.">
+        {{ ui.csrf_field() }}<button class="btn sm icon ghost" aria-label="Delete exam">🗑</button></form>
+      {% endif %}
+    </div>
+  </div>
+  {% if not roster or not subjects %}
+    <div class="card">{{ ui.empty('🎒', 'Nothing to enter yet', 'This class needs students and subjects first.') }}</div>
+  {% else %}
+  <p class="small muted">⌨️ Type a mark and press <b>Enter</b> to go down. Arrow keys move around. Changes save automatically.</p>
+  <form method="post" action="/staff/exams/{{ exam.id }}">
+    {{ ui.csrf_field() }}
+    <div class="marks-wrap">
+      <table class="marks" data-max="{{ exam.max_marks }}" data-autosave="/staff/exams/{{ exam.id }}/autosave">
+        <thead><tr><th>Student</th>
+          {% for s in subjects %}<th><span class="subj-dot" style="--c:{{ COLOURS.get(s.colour, '#4f46e5') }};width:26px;height:26px;font-size:.85rem">{{ s.icon }}</span><br>{{ s.name }}{% if s.archived %}<br><span class="badge">archived</span>{% endif %}</th>{% endfor %}
+          <th>%</th><th>Remark</th></tr></thead>
+        <tbody>
+        {% for st in roster %}
+          <tr><td><b>{{ st.user.name }}</b><br><span class="xs muted">{{ st.user.login_id }}</span></td>
+            {% for s in subjects %}
+              {% set v = marks.get((st.id, s.id)) %}
+              <td><input class="mk" name="m_{{ st.id }}_{{ s.id }}" data-col="{{ s.id }}" value="{{ v|num if v is not none else '' }}"
+                   inputmode="decimal" autocomplete="off" aria-label="{{ st.user.name }} {{ s.name }}"></td>
+            {% endfor %}
+            <td class="tot">—</td>
+            <td><input class="rem" name="r_{{ st.id }}" value="{{ remarks.get(st.id, '') }}" maxlength="300" placeholder="Optional" aria-label="Remark for {{ st.user.name }}"></td></tr>
+        {% endfor %}
+        </tbody>
+        <tfoot><tr><td>Class average</td>{% for s in subjects %}<td data-avg="{{ s.id }}">—</td>{% endfor %}<td></td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <div class="savebar">
+      <div><div class="save-state" id="save-state"><i></i><span>All changes saved ✓</span></div><div class="xs muted" id="filled"></div></div>
+      <button class="btn sm ghost" type="submit">💾 Save now</button>
+    </div>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
