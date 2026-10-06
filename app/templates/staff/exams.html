@@ -1,0 +1,38 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head">
+    <div><h1>Exams & marks</h1><div class="sub">Class {{ standard }} · {{ class_size }} students</div></div>
+    {% if standard %}<button class="btn sm" type="button" data-open="newExam">＋ New exam</button>{% endif %}
+  </div>
+  {{ ui.class_chips(classes, standard, '/staff/exams') }}
+  <div class="grid md-g2">
+  {% for e in exams %}
+    {% set done = counts.get(e.id, 0) %}
+    <a class="card" href="/staff/exams/{{ e.id }}" style="margin:0;color:inherit;text-decoration:none;display:block">
+      <div class="card-title"><h3>{{ e.name }}</h3><span class="badge {{ 'b-published' if e.published else 'b-draft' }}">{{ 'Published' if e.published else 'Draft' }}</span></div>
+      <div class="small muted">🗓 {{ e.exam_date|d }} · out of {{ e.max_marks|num }} per subject</div>
+      <div class="bar" style="margin-top:12px"><i style="--w:{{ (done / class_size * 100) if class_size else 0 }}%;--c:var(--brand-2)"></i></div>
+      <div class="xs muted" style="margin-top:6px">{{ done }} of {{ class_size }} students have marks · <b style="color:var(--brand-2)">Open →</b></div>
+    </a>
+  {% else %}
+    <div class="card" style="grid-column:1/-1">{{ ui.empty('📝', 'No exams yet', 'Create one to start entering marks.') }}</div>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block page_dialogs %}
+{% call ui.sheet('newExam', 'New exam · Class ' ~ standard) %}
+<form method="post" action="/staff/exams">
+  {{ ui.csrf_field() }}<input type="hidden" name="standard" value="{{ standard }}">
+  <label for="ex-name">Exam name</label><input id="ex-name" name="name" placeholder="e.g. Unit Test 3" required maxlength="120" autofocus>
+  <div class="field-row">
+    <div><label for="ex-date">Date</label><input id="ex-date" name="exam_date" type="date" value="{{ today.isoformat() }}" required></div>
+    <div><label for="ex-max">Max marks per subject</label><input id="ex-max" name="max_marks" type="number" min="1" max="1000" step="0.5" value="25" required></div>
+  </div>
+  <p class="hint">Results stay hidden from students until you publish them.</p>
+  <button class="btn block" style="margin-top:12px">Create & enter marks</button>
+</form>
+{% endcall %}
+{% endblock %}
