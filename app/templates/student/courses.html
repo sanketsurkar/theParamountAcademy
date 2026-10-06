@@ -1,0 +1,17 @@
+{% extends "student/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head"><div><h1>My courses</h1><div class="sub">Class {{ user.student.standard }} · tap a subject to open notes</div></div></div>
+  <div class="tiles">
+    {% for s in subjects %}
+    <a class="tile" href="/s/courses/{{ s.id }}" style="--c:{{ COLOURS.get(s.colour, '#4f46e5') }}">
+      <span class="ic">{{ s.icon }}</span><b>{{ s.name }}</b>
+      <span>{{ counts.get(s.id, 0) }} file{{ '' if counts.get(s.id, 0) == 1 else 's' }}</span></a>
+    {% else %}
+    <div class="card" style="grid-column:1/-1">{{ ui.empty('📚', 'No subjects yet', 'Your academy will add subjects soon.') }}</div>
+    {% endfor %}
+  </div>
+  <p class="small muted center" style="margin-top:16px">💡 Open a subject and tap <b>Save offline</b> to read notes without internet.</p>
+</div>
+{% endblock %}
