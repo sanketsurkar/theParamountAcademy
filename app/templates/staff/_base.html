@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block body_class %}staff{% endblock %}
+{% block shell %}
+{% set is_admin = user.role == 'admin' %}
+{% set items = ([('home', '/staff', '📊', 'Dashboard'), ('students', '/staff/students', '🎒', 'Students'),
+                 ('teachers', '/admin/teachers', '🧑‍🏫', 'Teachers'), ('subjects', '/admin/subjects', '🎨', 'Subjects'),
+                 ('content', '/staff/content', '📚', 'Notes'), ('exams', '/staff/exams', '📝', 'Exams & marks'),
+                 ('fees', '/admin/fees', '💰', 'Fees'), ('notices', '/admin/notices', '📢', 'Notices'),
+                 ('settings', '/admin/settings', '⚙️', 'Settings'), ('promote', '/admin/promote', '🎓', 'Year end'),
+                 ('audit', '/admin/audit', '🕵️', 'Activity log')] if is_admin else
+                [('home', '/staff', '🏠', 'Home'), ('students', '/staff/students', '🎒', 'Students'),
+                 ('content', '/staff/content', '📚', 'Notes'), ('exams', '/staff/exams', '📝', 'Exams & marks')]) %}
+<header class="staff-top side">
+  <div class="in">
+    <span class="logo" style="width:40px;height:40px;border-radius:13px;font-size:1.2rem;margin:0;animation:none">🎓</span>
+    <div class="brand">{{ settings.academy_name }}<span>{{ 'Admin' if is_admin else 'Teacher' }} · {{ user.name }}</span></div>
+    <button class="iconbtn" type="button" data-theme-toggle aria-label="Switch light or dark mode">🌙</button>
+    <button class="iconbtn mob" type="button" data-open="acct" aria-label="Account">👤</button>
+  </div>
+  <nav class="staff-nav" aria-label="Sections">
+    {% for key, href, icon, label in items %}
+      <a href="{{ href }}" class="{{ 'on' if nav == key }}" {{ 'aria-current=page' if nav == key }}><span>{{ icon }}</span>{{ label }}</a>
+    {% endfor %}
+  </nav>
+  <div class="side-foot">
+    <div class="row"><a href="/change-password" style="color:#fff">🔑 Password</a>
+      <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}">
+        <button class="link" style="color:#fff">⎋ Sign out</button></form></div>
+    <div style="opacity:.6;margin-top:8px">v{{ VERSION }}</div>
+  </div>
+</header>
+<main class="wrap">{% block content %}{% endblock %}</main>
+{% endblock %}
+{% block dialogs %}
+<dialog id="acct" class="sheet" aria-labelledby="acct-t">
+  <div class="sheet-head"><h3 id="acct-t">{{ user.name }}</h3><button type="button" class="sheet-close" data-close aria-label="Close">✕</button></div>
+  <div class="sheet-body">
+    <p class="muted small" style="margin-top:0">{{ user.login_id }} · {{ user.role|capitalize }}</p>
+    <a class="btn block ghost" href="/change-password">🔑 Change password</a>
+    <form method="post" action="/logout" style="margin-top:10px"><input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn block danger">Sign out</button></form>
+  </div>
+</dialog>
+{% block page_dialogs %}{% endblock %}
+{% endblock %}
