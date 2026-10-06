@@ -1,0 +1,24 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head"><div><h1>🎓 Year-end promotion</h1><div class="sub">Run once at the start of a new academic year</div></div></div>
+  <div class="card">
+    <p style="margin-top:0">This moves <b>every active student up one class</b>. Class 12 students are marked <b>passed out</b>.
+      Past results, fees and receipts stay unchanged.</p>
+    <div class="scroll"><table class="tbl">
+      <thead><tr><th>Now</th><th>Students</th><th>After</th></tr></thead>
+      <tbody>{% for s in STANDARDS if counts.get(s) %}<tr><td>Class {{ s }}</td><td><b>{{ counts[s] }}</b></td><td>{{ 'Passed out 🎓' if s == 12 else 'Class ' ~ (s + 1) }}</td></tr>
+      {% else %}<tr><td colspan="3" class="muted">No active students.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+  <div class="card" style="border-color:var(--bad)">
+    <b style="color:var(--bad)">⚠️ This can't be undone automatically.</b>
+    <form method="post" action="/admin/promote" data-confirm="Promote all students now?">
+      {{ ui.csrf_field() }}
+      <label for="pr-c">Type <b>PROMOTE</b> to confirm</label><input id="pr-c" name="confirm" autocomplete="off" required>
+      <button class="btn block danger" style="margin-top:12px">Promote all students</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
