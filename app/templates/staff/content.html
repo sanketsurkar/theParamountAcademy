@@ -1,0 +1,57 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head">
+    <div><h1>Course notes</h1><div class="sub">Class {{ standard }} · PDF or Word, up to {{ max_mb }} MB</div></div>
+    {% if subjects %}<button class="btn sm" type="button" data-open="upload">⬆ Upload notes</button>{% endif %}
+  </div>
+  {{ ui.class_chips(classes, standard, '/staff/content') }}
+  {% for s in subjects %}
+  {% set chapters = grouped[s.id] %}
+  <details class="acc" {{ 'open' if loop.first }}>
+    <summary><span class="subj-dot" style="--c:{{ COLOURS.get(s.colour, '#4f46e5') }}">{{ s.icon }}</span>
+      <span class="grow">{{ s.name }}<br><span class="xs muted" style="font-weight:500">{{ chapters.values()|map('length')|sum }} file(s) · {{ chapters|length }} chapter(s)</span></span></summary>
+    <div class="acc-body">
+      {% for chapter, items in chapters.items() %}
+        <div class="xs muted" style="font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-top:10px">{{ chapter }}</div>
+        {% for c in items %}
+        <div class="file">
+          <span class="fi {{ c.file_type }}">{{ c.file_type|upper }}</span>
+          <div class="grow"><b class="ellipsis" style="display:block">{{ c.title }}</b><span class="xs muted">{{ ((c.size_bytes / 1024)|round|int) }} KB · {{ c.created_at|d }}</span></div>
+          <a class="btn sm soft" href="/files/{{ c.id }}" target="_blank" rel="noopener">Open</a>
+          <form method="post" action="/staff/content/{{ c.id }}/delete" class="inline" data-confirm="Delete “{{ c.title }}”? Students will no longer see it.">
+            {{ ui.csrf_field() }}<button class="btn sm icon ghost" aria-label="Delete {{ c.title }}">🗑</button></form>
+        </div>
+        {% endfor %}
+      {% else %}
+        {{ ui.empty('🗂️', 'No notes yet', 'Upload the first file for ' ~ s.name ~ '.') }}
+      {% endfor %}
+    </div>
+  </details>
+  {% else %}
+  <div class="card">{{ ui.empty('🎨', 'No subjects in this class', 'The admin can add subjects on the Subjects page.') }}</div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block page_dialogs %}
+{% call ui.sheet('upload', 'Upload notes · Class ' ~ standard) %}
+<form method="post" action="/staff/content" enctype="multipart/form-data" data-upload data-max-mb="{{ max_mb }}">
+  {{ ui.csrf_field() }}
+  <label class="dropzone">
+    <input type="file" name="file" accept=".pdf,.docx" required>
+    <span class="big">📄</span><b>Drop a PDF or Word file</b><span class="small muted">or tap to choose · max {{ max_mb }} MB</span>
+    <span class="picked"></span>
+  </label>
+  <label for="up-subj">Subject</label>
+  <select id="up-subj" name="subject_id" required>{% for s in subjects %}<option value="{{ s.id }}">{{ s.icon }} {{ s.name }}</option>{% endfor %}</select>
+  <label for="up-ch">Chapter</label>
+  <input id="up-ch" name="chapter" list="chapter-list" placeholder="e.g. Chapter 3 – Fractions" required maxlength="120">
+  <datalist id="chapter-list">{% for ch in chapters %}<option value="{{ ch }}">{% endfor %}</datalist>
+  <label for="up-title">Title <span class="muted">(optional)</span></label>
+  <input id="up-title" name="title" maxlength="200" placeholder="Taken from the file name">
+  <div class="upbar" hidden><i></i></div>
+  <button class="btn block" type="submit" style="margin-top:14px">Upload</button>
+</form>
+{% endcall %}
+{% endblock %}
