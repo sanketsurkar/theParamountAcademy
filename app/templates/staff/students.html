@@ -1,0 +1,45 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head">
+    <div><h1>Students</h1><div class="sub">{{ 'Passed out' if passed else 'Class ' ~ standard }} · {{ rows|length }} student{{ '' if rows|length == 1 else 's' }}</div></div>
+    <div class="row">
+      {% if user.role == 'admin' %}<a class="btn ghost sm" href="/staff/students/import">⬆ Import Excel/CSV</a>{% endif %}
+      {% if classes %}<button class="btn sm" type="button" data-open="addStudent">＋ Add student</button>{% endif %}
+    </div>
+  </div>
+  {{ ui.class_chips(classes, standard, '/staff/students', extra=('<a class="chip' ~ (' on' if passed else '') ~ '" href="/staff/students?standard=passed">🎓 Passed out</a>') if user.role == 'admin' else none) }}
+  <div class="search"><input type="search" placeholder="Search name, ID or phone…" data-filter="#stu-list" aria-label="Search students"></div>
+  <div class="card pad0">
+    <div id="stu-list">
+      {% for st in rows %}
+      <a class="item" href="/staff/students/{{ st.id }}" data-panel data-title="Student profile">
+        <span class="avatar" {% if not st.user.active %}style="filter:grayscale(1);opacity:.6"{% endif %}>{{ st.user.name|initials }}</span>
+        <span class="grow"><b>{{ st.user.name }}</b>{% if not st.user.active %} <span class="badge b-bad">Inactive</span>{% endif %}<br>
+          <span class="small muted">{{ st.user.login_id }}{% if st.parent_phone %} · 📞 {{ st.parent_phone }}{% endif %}</span></span>
+        <span class="chev">›</span>
+      </a>
+      {% endfor %}
+    </div>
+    <div id="nomatch" hidden>{{ ui.empty('🔎', 'No matching students') }}</div>
+    {% if not rows %}{{ ui.empty('🎒', 'No students here yet', 'Add one, or import a list from Excel.') }}{% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block page_dialogs %}
+{% call ui.sheet('addStudent', 'Add a student') %}
+<form method="post" action="/staff/students/new">
+  {{ ui.csrf_field() }}
+  <label for="ns-name">Full name</label><input id="ns-name" name="name" required minlength="2" maxlength="120" autofocus>
+  <label for="ns-std">Class</label>
+  <select id="ns-std" name="standard">{% for c in classes %}<option value="{{ c }}" {{ 'selected' if c == standard }}>Class {{ c }}</option>{% endfor %}</select>
+  <div class="field-row">
+    <div><label for="ns-pn">Parent name</label><input id="ns-pn" name="parent_name" maxlength="120"></div>
+    <div><label for="ns-pp">Parent phone</label><input id="ns-pp" name="parent_phone" inputmode="tel" maxlength="15"></div>
+  </div>
+  <p class="hint">A Student ID and one-time password are created automatically.</p>
+  <button class="btn block" style="margin-top:12px">Create student</button>
+</form>
+{% endcall %}
+{% endblock %}
