@@ -1,0 +1,39 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head"><div><h1>Settings</h1><div class="sub">Academy details, payments and leaderboard</div></div></div>
+  <form method="post" action="/admin/settings" enctype="multipart/form-data">
+    {{ ui.csrf_field() }}
+    <div class="card">
+      <h3>🏫 Academy</h3>
+      <div class="field-row">
+        <div><label for="s-name">Academy name</label><input id="s-name" name="academy_name" value="{{ settings.academy_name }}" maxlength="80" required></div>
+        <div><label for="s-ph">Office phone</label><input id="s-ph" name="phone" value="{{ settings.phone }}" maxlength="30"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>💳 UPI payments</h3>
+      <div class="field-row">
+        <div><label for="s-upi">UPI ID</label><input id="s-upi" name="upi_id" value="{{ settings.upi_id }}" placeholder="yourname@okbank" maxlength="80"></div>
+        <div><label for="s-payee">Payee name</label><input id="s-payee" name="upi_payee" value="{{ settings.upi_payee }}" maxlength="80"></div>
+      </div>
+      <label>UPI QR code</label>
+      <div class="row" style="align-items:flex-start">
+        {% if settings.upi_qr %}<img src="/upi-qr" alt="Current UPI QR" style="width:110px;border-radius:12px;background:#fff;padding:6px;border:1px solid var(--line)">{% endif %}
+        <label class="dropzone grow" style="margin:0;padding:18px">
+          <input type="file" name="upi_qr" accept=".png,.jpg,.jpeg">
+          <span class="big">▦</span><b>{{ 'Replace' if settings.upi_qr else 'Upload' }} QR image</b><span class="xs muted">PNG or JPG · under 2 MB</span>
+        </label>
+      </div>
+      {% if settings.upi_qr %}<label class="check" style="margin-top:10px"><input type="checkbox" name="remove_qr" value="1"> Remove QR code</label>{% endif %}
+    </div>
+    <div class="card">
+      <h3>🏆 Leaderboard</h3>
+      <label class="switch"><span>Show class leaderboard to students<br><span class="xs muted" style="font-weight:500">Turn off during sensitive periods</span></span>
+        <input type="checkbox" name="leaderboard_enabled" value="1" {{ 'checked' if settings.leaderboard_enabled == '1' }}></label>
+    </div>
+    <button class="btn block">Save settings</button>
+  </form>
+</div>
+{% endblock %}
