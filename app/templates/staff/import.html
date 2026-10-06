@@ -1,0 +1,25 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <a class="small" href="/staff/students">← Students</a>
+  <div class="page-head" style="margin-top:8px"><div><h1>Import students</h1><div class="sub">Add many students at once from Excel or CSV</div></div></div>
+  <div class="card">
+    <ol class="small" style="padding-left:18px;margin-top:0">
+      <li>Download the <a href="/staff/students/import/template.csv">template</a> and open it in Excel.</li>
+      <li>Fill one row per student: <b>name</b>, <b>standard</b> (1–12), parent_name, parent_phone.</li>
+      <li>Save as <b>.xlsx</b> or <b>.csv</b> and drop it below.</li>
+    </ol>
+    <form method="post" action="/staff/students/import" enctype="multipart/form-data" data-upload data-max-mb="5">
+      {{ ui.csrf_field() }}
+      <label class="dropzone">
+        <input type="file" name="file" accept=".xlsx,.csv" required>
+        <span class="big">📊</span><b>Drop your Excel/CSV file here</b><span class="small muted">or tap to choose</span>
+        <span class="picked"></span>
+      </label>
+      <div class="upbar" hidden><i></i></div>
+      <button class="btn block" type="submit" style="margin-top:14px">Import students</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
