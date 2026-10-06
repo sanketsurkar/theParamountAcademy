@@ -1,0 +1,77 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head"><div><h1>Subjects</h1><div class="sub">Class {{ standard }} · add, rename, reorder or remove subjects</div></div>
+    <button class="btn sm" type="button" data-open="addSubject">＋ Add subject</button></div>
+  {{ ui.class_chips(STANDARDS, standard, '/admin/subjects', counts=counts) }}
+  {% for s in active %}
+    {% set files, marks = usage[s.id] %}
+    <div class="subj-card" style="--c:{{ COLOURS.get(s.colour, '#4f46e5') }}">
+      <span class="ic">{{ s.icon }}</span>
+      <div class="grow"><b>{{ s.name }}</b><div class="xs muted">{{ files }} file{{ '' if files == 1 else 's' }} · {{ marks }} mark{{ '' if marks == 1 else 's' }}</div></div>
+      <div class="acts">
+        <form method="post" action="/admin/subjects/{{ s.id }}/move" class="inline">{{ ui.csrf_field() }}<input type="hidden" name="direction" value="up">
+          <button class="btn sm icon ghost" aria-label="Move {{ s.name }} up" {{ 'disabled' if loop.first }}>↑</button></form>
+        <form method="post" action="/admin/subjects/{{ s.id }}/move" class="inline">{{ ui.csrf_field() }}<input type="hidden" name="direction" value="down">
+          <button class="btn sm icon ghost" aria-label="Move {{ s.name }} down" {{ 'disabled' if loop.last }}>↓</button></form>
+        <button class="btn sm icon ghost" type="button" aria-label="Edit {{ s.name }}" data-open="editSubject" data-action="/admin/subjects/{{ s.id }}/edit"
+          data-values='{{ {"name": s.name, "colour": s.colour, "icon": s.icon}|tojson }}'>✏️</button>
+        <button class="btn sm icon ghost" type="button" aria-label="Copy {{ s.name }} to other classes" data-open="copySubject" data-action="/admin/subjects/{{ s.id }}/copy"
+          data-values='{{ {"subject": s.name}|tojson }}'>📋</button>
+        <form method="post" action="/admin/subjects/{{ s.id }}/remove" class="inline"
+          data-confirm="{{ ('Archive ' ~ s.name ~ '? It has ' ~ files ~ ' file(s) and ' ~ marks ~ ' mark(s), so it will be hidden but kept — you can restore it later.') if files or marks else ('Delete ' ~ s.name ~ ' from Class ' ~ standard ~ '?') }}">
+          {{ ui.csrf_field() }}<button class="btn sm icon ghost" aria-label="Remove {{ s.name }}">🗑</button></form>
+      </div>
+    </div>
+  {% else %}
+    <div class="card">{{ ui.empty('🎨', 'No subjects in Class ' ~ standard, 'Add one to get started.') }}</div>
+  {% endfor %}
+  {% if archived %}
+  <h2>Archived <span class="muted small">— hidden from students and new exams; old results still show</span></h2>
+  {% for s in archived %}
+    {% set files, marks = usage[s.id] %}
+    <div class="subj-card archived" style="--c:{{ COLOURS.get(s.colour, '#4f46e5') }}">
+      <span class="ic">{{ s.icon }}</span>
+      <div class="grow"><b>{{ s.name }}</b><div class="xs muted">{{ files }} files · {{ marks }} marks kept</div></div>
+      <form method="post" action="/admin/subjects/{{ s.id }}/restore" class="inline">{{ ui.csrf_field() }}<button class="btn sm soft">↩ Restore</button></form>
+    </div>
+  {% endfor %}
+  {% endif %}
+  <p class="xs muted" style="margin-top:14px">💡 Removing a subject that has notes or marks <b>archives</b> it instead of deleting, so past results stay correct.</p>
+</div>
+{% endblock %}
+{% block page_dialogs %}
+{% macro look(prefix, default_colour='indigo', default_icon='📘') %}
+<label class="label">Colour</label>
+<div class="swatches">{% for key, hex in COLOURS.items() %}<label><input type="radio" name="colour" value="{{ key }}" {{ 'checked' if key == default_colour }}><span style="--c:{{ hex }}" title="{{ key }}"></span></label>{% endfor %}</div>
+<label class="label">Icon</label>
+<div class="icons">{% for i in ICONS %}<label><input type="radio" name="icon" value="{{ i }}" {{ 'checked' if i == default_icon }}><span>{{ i }}</span></label>{% endfor %}</div>
+{% endmacro %}
+{% call ui.sheet('addSubject', 'Add subject') %}
+<form method="post" action="/admin/subjects">
+  {{ ui.csrf_field() }}<input type="hidden" name="standard" value="{{ standard }}">
+  <label for="as-name">Subject name</label><input id="as-name" name="name" required minlength="2" maxlength="40" placeholder="e.g. Hindi, Computer Science" autofocus>
+  {{ look('as') }}
+  <label class="label">Add to Class {{ standard }} and also…</label>
+  <div class="checks grid12">{% for s in STANDARDS %}{% if s != standard %}<label><input type="checkbox" name="standards" value="{{ s }}">{{ s }}</label>{% endif %}{% endfor %}</div>
+  <button class="btn block" style="margin-top:14px">Add subject</button>
+</form>
+{% endcall %}
+{% call ui.sheet('editSubject', 'Edit subject') %}
+<form method="post" action="#">
+  {{ ui.csrf_field() }}
+  <label for="es-name">Subject name</label><input id="es-name" name="name" required minlength="2" maxlength="40">
+  {{ look('es') }}
+  <button class="btn block" style="margin-top:14px">Save</button>
+</form>
+{% endcall %}
+{% call ui.sheet('copySubject', 'Copy to other classes') %}
+<form method="post" action="#">
+  {{ ui.csrf_field() }}
+  <p class="small muted" style="margin-top:0">Add <b data-text="subject"></b> (same colour and icon) to:</p>
+  <div class="checks grid12">{% for s in STANDARDS %}{% if s != standard %}<label><input type="checkbox" name="standards" value="{{ s }}">{{ s }}</label>{% endif %}{% endfor %}</div>
+  <button class="btn block" style="margin-top:14px">Copy subject</button>
+</form>
+{% endcall %}
+{% endblock %}
