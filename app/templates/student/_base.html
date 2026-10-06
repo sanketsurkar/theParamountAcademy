@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body_class %}student{% endblock %}
+{% block shell %}
+<header class="appbar"><div class="in">
+  <a href="/s/profile" class="avatar on-hero" aria-label="Profile">{{ user.name|initials }}</a>
+  <div class="who"><b>{{ user.name }}</b><span>{{ user.login_id }} · Class {{ user.student.standard }}</span></div>
+  <button class="iconbtn" type="button" data-theme-toggle aria-label="Switch light or dark mode">🌙</button>
+</div></header>
+<main class="wrap">{% block content %}{% endblock %}</main>
+<nav class="tabbar" aria-label="Main">
+  <span class="ind" data-i="{{ tab }}" style="--i:{{ tab if tab >= 0 else 0 }}"></span>
+  <a href="/s" class="{{ 'on' if tab == 0 }}" {{ 'aria-current=page' if tab == 0 }}><span class="i">🏠</span>Home</a>
+  <a href="/s/courses" class="{{ 'on' if tab == 1 }}" {{ 'aria-current=page' if tab == 1 }}><span class="i">📚</span>Courses</a>
+  <a href="/s/results" class="{{ 'on' if tab == 2 }}" {{ 'aria-current=page' if tab == 2 }}><span class="i">📈</span>Results</a>
+  <a href="/s/leaderboard" class="{{ 'on' if tab == 3 }}" {{ 'aria-current=page' if tab == 3 }}><span class="i">🏆</span>Ranks</a>
+  <a href="/s/fees" class="{{ 'on' if tab == 4 }}" {{ 'aria-current=page' if tab == 4 }}><span class="i">💳</span>Fees</a>
+</nav>
+{% endblock %}
