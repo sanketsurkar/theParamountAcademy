@@ -1,0 +1,57 @@
+{% extends "staff/_base.html" %}
+{% import "macros.html" as ui with context %}
+{% block content %}
+<div class="reveal">
+  <div class="page-head"><div><h1>Teachers</h1><div class="sub">{{ rows|length }} teacher{{ '' if rows|length == 1 else 's' }} · assign classes to control what each can edit</div></div>
+    <button class="btn sm" type="button" data-open="addTeacher">＋ Add teacher</button></div>
+  <div class="search"><input type="search" placeholder="Search teachers…" data-filter="#t-list" aria-label="Search teachers"></div>
+  <div id="t-list">
+  {% for t in rows %}
+    <details class="acc">
+      <summary>
+        <span class="avatar" {% if not t.user.active %}style="filter:grayscale(1);opacity:.6"{% endif %}>{{ t.user.name|initials }}</span>
+        <span class="grow">{{ t.user.name }} {% if not t.user.active %}<span class="badge b-bad">Inactive</span>{% endif %}<br>
+          <span class="xs muted" style="font-weight:500">{{ t.user.login_id }} · {{ t.subjects or 'No subjects listed' }}</span></span>
+        <span class="row" style="gap:4px">{% for s in t.standard_list %}<span class="badge b-info">{{ s }}</span>{% endfor %}</span>
+      </summary>
+      <div class="acc-body">
+        <form method="post" action="/admin/teachers/{{ t.id }}/edit">
+          {{ ui.csrf_field() }}
+          <div class="field-row">
+            <div><label>Name</label><input name="name" value="{{ t.user.name }}" required maxlength="120"></div>
+            <div><label>Phone</label><input name="phone" value="{{ t.phone }}" inputmode="tel" maxlength="15"></div>
+          </div>
+          <label>Subjects taught</label><input name="subjects" value="{{ t.subjects }}" maxlength="200" placeholder="e.g. Mathematics, Science">
+          <label>Classes</label>
+          <div class="checks grid12">{% for s in STANDARDS %}<label><input type="checkbox" name="standards" value="{{ s }}" {{ 'checked' if s in t.standard_list }}>{{ s }}</label>{% endfor %}</div>
+          <button class="btn block" style="margin-top:12px">Save</button>
+        </form>
+        <div class="row" style="margin-top:10px">
+          <form method="post" action="/admin/users/{{ t.user.id }}/reset-password" class="inline" data-confirm="Reset {{ t.user.name }}'s password?">
+            {{ ui.csrf_field() }}<button class="btn sm ghost">🔑 Reset password</button></form>
+          <form method="post" action="/admin/users/{{ t.user.id }}/toggle" class="inline" data-confirm="{{ 'Reactivate' if not t.user.active else 'Deactivate' }} {{ t.user.name }}?">
+            {{ ui.csrf_field() }}<button class="btn sm {{ 'success' if not t.user.active else 'ghost' }}">{{ '✅ Reactivate' if not t.user.active else '⛔ Deactivate' }}</button></form>
+        </div>
+      </div>
+    </details>
+  {% endfor %}
+  </div>
+  <div id="nomatch" hidden class="card">{{ ui.empty('🔎', 'No matching teachers') }}</div>
+  {% if not rows %}<div class="card">{{ ui.empty('🧑‍🏫', 'No teachers yet', 'Add your first teacher.') }}</div>{% endif %}
+</div>
+{% endblock %}
+{% block page_dialogs %}
+{% call ui.sheet('addTeacher', 'Add a teacher') %}
+<form method="post" action="/admin/teachers">
+  {{ ui.csrf_field() }}
+  <label for="nt-name">Full name</label><input id="nt-name" name="name" required minlength="2" maxlength="120" autofocus>
+  <div class="field-row">
+    <div><label for="nt-phone">Phone</label><input id="nt-phone" name="phone" inputmode="tel" maxlength="15"></div>
+    <div><label for="nt-subj">Subjects taught</label><input id="nt-subj" name="subjects" maxlength="200" placeholder="Maths, Science"></div>
+  </div>
+  <label>Classes this teacher handles</label>
+  <div class="checks grid12">{% for s in STANDARDS %}<label><input type="checkbox" name="standards" value="{{ s }}">{{ s }}</label>{% endfor %}</div>
+  <button class="btn block" style="margin-top:14px">Create teacher</button>
+</form>
+{% endcall %}
+{% endblock %}
